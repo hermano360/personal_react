@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Page, Panel, Table, TableHead, TableBody, TableRow, Button, EditableText, Pagination, Breadcrumbs } from 'react-blur-admin';
+import { Page, Panel, Table, TableHead, TableBody, TableRow, Button, EditableText, Pagination, Breadcrumbs, Select } from 'react-blur-admin';
 import { Link } from 'react-router';
 
 import {Row, Col} from 'react-flex-proto';
@@ -208,7 +208,18 @@ export class TableDemo extends React.Component {
               <TableRow>
                 <td>4</td>
                 <td>Matt</td>
-                <td>Marubini</td>
+                <td>                <Select
+                                  placeholder='Drivers'
+                                  isSearchable={true}
+                                  options={[
+                                    { value: 1, label: 'One' },
+                                    { value: 2, label: 'Two' },
+                                    { value: 3, label: 'Three' },
+                                    { value: 4, label: 'Four' },
+                                    { value: 5, label: 'Five' },
+                                    { value: 6, label: 'Six' },
+                                  ]}
+                                   /></td>
               </TableRow>
             </TableBody>
           </Table>
@@ -258,7 +269,20 @@ export class TableDemo extends React.Component {
                 <td>Matt</td>
                 <td>Marubini</td>
                 <td>othermatt@email.com</td>
-                <td>555-555-5555</td>
+                <td>
+                <Select
+                  placeholder='Drivers'
+                  isSearchable={true}
+                  options={[
+                    { value: 1, label: 'One' },
+                    { value: 2, label: 'Two' },
+                    { value: 3, label: 'Three' },
+                    { value: 4, label: 'Four' },
+                    { value: 5, label: 'Five' },
+                    { value: 6, label: 'Six' },
+                  ]}
+                   />
+                   </td>
                 <td className='text-success'>Active</td>
                 <td>26</td>
               </TableRow>
@@ -269,4 +293,3 @@ export class TableDemo extends React.Component {
     );
   }
 }
-
