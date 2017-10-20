@@ -81,7 +81,7 @@ class AppLayout extends React.Component {
     return (
       <div>
         <main className=''>
-          <Sidebar {...this.props} />
+          {/*<Sidebar {...this.props} />*/}
           <PageTop location={this.props.location} user={this.state.user} />
 
           <div className="al-main">

@@ -1,11 +1,14 @@
 import React from 'react';
-import { Page, Panel, Button, Textarea, Table, TableHead, TableBody, TableRow, Select } from 'react-blur-admin';
+import { Page, Panel, Button, Textarea, Table, TableHead, TableBody, TableRow, Select, eventBus, Modal } from 'react-blur-admin';
 import { Row, Col, ClearFix } from 'react-grid-system';
 import {Radar, RadarChart, PolarGrid, Legend, PolarAngleAxis, PolarRadiusAxis} from 'recharts';
 import StarRatingComponent from 'react-star-rating-component';
 import styles from "./style.css";
 import EventSource from 'react-eventsource'
 import axios from 'axios'
+import { Order } from './Order.js'
+import { UserProfile } from './UserProfile.js'
+require('./cookie.js')
 
 const urlDatabase = (strain) => {
   switch (strain) {
@@ -41,14 +44,23 @@ const orderBuzzwords = (order) => {
     })
 }
 
+
+
 const renderEvent = event => <div>{ event }</div>
+
+
 
 export class Welcome extends React.Component {
   constructor() {
     super()
     this.state = {
+      orders: [],
+      customers: {},
+      selectedUser:0,
       selectedCustomer:"Herminio Garcia",
       selectedOrder:0,
+      customerRecOpen: false,
+      customerIdOpen: false,
       "customerInformation":{
       "Herminio Garcia": {
         "categoryScores":[5,6,3,2,9], //Hybrid, Sativa Hybrid, Sativa, Indica, Indica Hybrid
@@ -66,7 +78,7 @@ export class Welcome extends React.Component {
             high: "head",
             harshness: "smooth",
             feedback: "Orange Crush is known for its dank earthy scent and citrus flavor.",
-            orderBuzzwords: [" citrus", "earthy", " citrus", "earthy", " citrus", "earthy"],
+            orderBuzzwords: ["citrus", "earthy", " citrus", "earthy", " citrus", "earthy"],
             dispensary: "Hollywood High Grade"
           },
           {
@@ -117,17 +129,86 @@ export class Welcome extends React.Component {
       }}
 
     }
+    this.customerModals = this.customerModals.bind(this)
+    this.getCustomerInfo = this.getCustomerInfo.bind(this)
   }
 
-  componentWillMount(){
+  renderOrders(orders) {
+    return orders.map((order,i)=> {
+      return (
+        <Order key={i} order={order} getCustomerInfo={this.getCustomerInfo}/>
+      )
+    })
+  }
 
-//     var client = new Faye.Client('http://d1b65084.fanoutcdn.com/bayeux');
-// client.subscribe('/test', function (data) {
-//     $('#output').text(data);
-// });
+  getCustomerInfo(customerFirstName, customerLastName, customerId) {
+    const url = `/dashboard/customer_preferences/${customerId}/`
+    axios.get(`https://demo1956799.mockable.io/${url}`)
+      .then( (res) => {
+        this.setState({
+          customers: {
+            ...this.state.customers,
+            [customerId] : {
+              ...res.data,
+              customerFirstName,
+              customerLastName
+            }
+          },
+          selectedUser: customerId
+        })
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
 
+  customerModals() {
+    return (
+    <div>
+    <Modal type='warning' title='Customer Rec' buttonText='OK'
+    isOpen={this.state.customerRecOpen} onClose={() => { this.setState({customerRecOpen: false})}}
+    shouldCloseOnOverlayClick={true}>
+      <Row>
+        <Col>
+          Customer Rec Photo
+        </Col>
+      </Row>
+    </Modal>
+    <Modal type='info' title='Customer Rec' buttonText='OK'
+    isOpen={this.state.customerIdOpen} onClose={() => { this.setState({customerIdOpen: false})}}
+    shouldCloseOnOverlayClick={true}>
+      <Row>
+        <Col>
+          Customer ID
+        </Col>
+      </Row>
+    </Modal>
+    </div>
+    )
+  }
 
-    axios.get('http://d1b65084.fanoutcdn.com/api/v0/events/?channel=customer_1').then((result) => { console.log('cwm',result)}).catch((err)=>{console.log('err', err)})
+  componentWillMount() {
+    // let csrftoken = Cookies.get('csrftoken');
+    // function csrfSafeMethod(method) {
+    //   // these HTTP methods do not require CSRF protection
+    //   return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    // }
+
+    axios.get('http://localhost:8000/dashboard/payload/', {
+      headers:
+      {
+        "Authorization" : "Token b5105eb7156772f029691eeba3148ff9a91f609c",
+        "Content-Type": "application/json"
+      }
+    })
+      .then( (response) => {
+        this.setState({
+          orders: response.data.orders
+        })
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }
 
   render() {
@@ -146,7 +227,6 @@ export class Welcome extends React.Component {
       )
     })
 
-
     const individualOrderTime = new Date(orders[selectedOrder].orderTime)
     const clockTime = () => {
       let hours = individualOrderTime.getHours() % 12 == 0 ? 12 : individualOrderTime.getHours() % 12
@@ -157,13 +237,14 @@ export class Welcome extends React.Component {
     const customerBuzzwords = () => {
       return orders[selectedOrder].orderBuzzwords.map((buzzword,i) => {
         return (
-          <Button type={i%2==0 ? 'info' : 'add'} size='sm' title={buzzword} isIconHidden={true}/>
+          <Button key={i} type={i%2==0 ? 'info' : 'add'} size='sm' title={buzzword} isIconHidden={true}/>
         )
       })
     }
 
     return (
-      <Page title="Dashboard - Order Overview">
+      <Page title="Dashboard - Order Overview" >
+      {this.customerModals()}
         <Row>
           <Col md={3}>
             <Panel title="Drivers, Dispensary Data">
@@ -171,53 +252,52 @@ export class Welcome extends React.Component {
             </Panel>
           </Col>
           <Col md={9}>
-            <Panel title='Customer Information'>
-            <Row>
-              <Col md={3} style={{textAlign:'center'}}>
-              <img src="/assets/images/headshot.jpg" alt="Herminio Garcia" height="150" width="105"/>
-              <h4>{selectedCustomer}</h4>
-              <Button type='warning' size='mm' title='Customer Recs' isIconHidden={true} style={{background:'red'}}/>
-              <Button type='info' size='mm' title='Customer ID' isIconHidden={true} style={{background:'red'}}/>
-
-              </Col>
-              <Col md={6}>
-              <RadarChart cx={90} cy={80} outerRadius={50} width={200} height={150} data={data} >
-                <PolarGrid  tick={false} />
-                <PolarAngleAxis dataKey="subject"/>
-                <PolarRadiusAxis domain={[0, 10]}  axisLine={false}/>
-                <Radar name={selectedCustomer} dataKey="A" stroke="#98BEA6" fill="#98BEA6" fillOpacity={0.6} isAnimationActive={true}/>
-              </RadarChart>
-              </Col>
-              <Col md={3}>
-              <h2>Price Point</h2>
-              <Button type='warning' size='sm' title={`Min: $${pricePoints[0]}`} isIconHidden={true}/>
-              <Button type='danger' size='sm' title={`Max: $${pricePoints[1]}`} isIconHidden={true} style={{background:'red'}}/>
-              </Col>
-
-              <Col md={3}>
-              <h2>Buzzwords</h2>
-              {buzzwordsCustomer}
-              </Col>
-
-            </Row>
-            <Row>
-            <Panel>
-              <div style={{maxHeight:'300px', overflowY:'scroll', border:'1px solid black', textAlign:'center'}}>
-              <Table>
-              {customerInfoTable(orders)}
-              </Table>
-              </div>
-            </Panel>
-            </Row>
-            </Panel>
+            <UserProfile customers={this.state.customers} selectedUser={this.state.selectedUser}/>
           </Col>
+
+          <Col md={12}>
+            <Row>
+            <Col md={5} style={{textAlign:'center'}}>
+
+            <Col xs={1} style={{textAlign:'center'}}>
+              <div style={{textAlign:'center'}}>5</div>
+            </Col>
+            <Col xs={5} style={{textAlign:'center', padding:'0'}}>
+              <div> Oct 9th, 2017</div>
+            </Col>
+            <Col xs={5} style={{textAlign:'center'}}>
+            <div style={{textAlign:'center', border:'1px white solid'}}>
+            Herminio Garcia <br/> 7474775136
+
+            1629 Second Street<br/> Duarte, CA 91010
+            </div>
+            </Col>
+            </Col>
+
+            <Col md={4} style={{textAlign:'center'}} className='orderSmall'>
+            <Col md={6}>
+            <Button title="Requested"/>
+            <div style={{display:'inline-block', border:'1px solid white', padding:'5px 13px', borderRadius:'5px'}}> Herbarium<br/> 7655439866</div>
+            </Col>
+            <Col md={6}>
+            <div style={{display:'inline-block', border:'1px solid white', padding:'5px 13px', borderRadius:'5px'}}> Strain</div>
+            <div style={{display:'inline-block', border:'1px solid white', padding:'5px 13px', borderRadius:'5px'}}> Driver</div>
+            </Col>
+            </Col>
+            <Col md={2} style={{textAlign:'center'}} className='orderSmall'>
+            <Button title="Strain"/>
+            <Button title="Driver"/>
+            </Col>
+            </Row>
+          </Col>
+
           <Col>
               <Table noTopBorder={false}>
               <TableHead>
-              <td style={{textAlign:'center'}}>#</td>
-              <td style={{textAlign:'center'}}>Order Date</td>
-              <td style={{textAlign:'center'}}>Customer</td>
-              <td style={{textAlign:'center'}}>Address</td>
+              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>#</td>
+              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Order Date</td>
+              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Customer</td>
+              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Address</td>
               <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Order Status</td>
               <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Dispensary</td>
               <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Strain</td>
@@ -225,61 +305,7 @@ export class Welcome extends React.Component {
               <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Status</td>
               </TableHead>
               <TableBody>
-              <TableRow style={{borderTop:'1px solid white'}}>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>{6}</td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Oct 9th 2017</td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-              Mohib Hassan<br/>
-              +16179828728
-              </td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-              <div style={{margin:'10px auto 10px auto'}}>
-              727 W 7th Street<br/>
-              Los Angeles, California 90017 <br/>
-              United States
-              <br/>
-              </div>
-              </td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-                <Button type='add' size='mm' title='Requested' isIconHidden={true}/>
-              </td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-              Herbarium <br/>
-              747-543-7642
-              </td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-                <Select
-                  placeholder='Strain'
-                  isSearchable={true}
-                  options={[
-                    { value: 1, label: 'One' },
-                    { value: 2, label: 'Two' },
-                    { value: 3, label: 'Three' },
-                    { value: 4, label: 'Four' },
-                    { value: 5, label: 'Five' },
-                    { value: 6, label: 'Six' },
-                  ]}
-                   />
-              </td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-              <Select
-                placeholder='Driver'
-                isSearchable={true}
-                options={[
-                  { value: 1, label: 'One' },
-                  { value: 2, label: 'Two' },
-                  { value: 3, label: 'Three' },
-                  { value: 4, label: 'Four' },
-                  { value: 5, label: 'Five' },
-                  { value: 6, label: 'Six' },
-                ]}
-                 />
-              </td>
-              <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>
-                <Button type='success' size='m' title='Update' isIconHidden={true}/>
-                <Button type='danger' size='m' title='Cancel' isIconHidden={true}/>
-              </td>
-              </TableRow>
+                {this.renderOrders(this.state.orders)}
               </TableBody>
               </Table>
           </Col>
@@ -293,12 +319,24 @@ const customerInfoTable = (orders) => {
   const monthNames= ['Jan', 'Feb', 'Mar', 'Apr', 'May', "Jun", 'Jul', "Aug", "Sep", "Oct", "Nov", "Dec"]
   const dayNames= ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   return orders.map((order, i) => {
+    let orderColor = 'white'
+    switch (order.type){
+      case 'sativa':
+        orderColor = 'green'
+        break
+      case 'indica':
+        orderColor = 'purple'
+        break
+      case 'hybrid':
+        orderColor = 'red'
+        break
+      }
     return (
       <TableRow noTopBorder={false}>
         <td style={{verticalAlign:'middle'}}>
           <a href={urlDatabase(order.strain)} target="_blank">
             <h4>{order.strain}</h4>
-            <h5>{capitalizeWord(order.type)}</h5>
+            <h5 style={{color : orderColor}}>{capitalizeWord(order.type)}</h5>
             <h5>{order.dispensary}</h5>
           </a>
         </td>
@@ -311,16 +349,18 @@ const customerInfoTable = (orders) => {
             starCount={5}
             value={order.rating}
             />
-            <EventSource url="http://d1b65084.fanoutcdn.com/api/v0/events/?channel=customer_1">
+            {/*<EventSource url="http://d1b65084.fanoutcdn.com/api/v0/events/?channel=customer_1">
               { events => {
                 console.log('react')
                 console.log(events) }}
-            </EventSource>
+            </EventSource>*/}
         </td>
       <td>
       <Textarea
         name='textarea'
-        value={order.feedback}/>
+        value={order.feedback}
+        onChange={()=>{}}
+        readOnly={true}/>
       </td>
     </TableRow>
     )

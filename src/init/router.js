@@ -25,7 +25,6 @@ export const AppRouter = (
   <Router history={browserHistory}>
     {redirect}
     <Route path='/login' component={Login} />
-    <Route component={AppLayout}>
       <Route path='/' component={Welcome} />
       <Route path='/about' component={About} />
       <Route path='/progress-bars' component={ProgressBars} />
@@ -36,6 +35,5 @@ export const AppRouter = (
       <Route path='/input-demo' component={InputDemo} />
       <Route path='/notifications-demo' component={NotificationsDemo} />
       <Route path="*" component={NotFound}/>
-    </Route>
   </Router>
 );
