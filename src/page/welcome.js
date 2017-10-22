@@ -7,6 +7,7 @@ import styles from "./style.css";
 import EventSource from 'react-eventsource'
 import axios from 'axios'
 import { Order } from './Order.js'
+import { OrderResponsive } from './OrderResponsive.js'
 import { UserProfile } from './UserProfile.js'
 require('./cookie.js')
 
@@ -141,14 +142,23 @@ export class Welcome extends React.Component {
     })
   }
 
-  getCustomerInfo(customerFirstName, customerLastName, customerId) {
-    const url = `/dashboard/customer_preferences/${customerId}/`
+  renderOrdersResponsive(orders) {
+    return orders.map((order,i)=> {
+      return (
+        <OrderResponsive key={i} order={order} getCustomerInfo={this.getCustomerInfo}/>
+      )
+    })
+  }
+
+  getCustomerInfo(userID) {
+    console.log(userID)
+    const url = `/dashboard/customer_preferences/${userID}/`
     axios.get(`https://demo1956799.mockable.io/${url}`)
       .then( (res) => {
         this.setState({
           customers: {
             ...this.state.customers,
-            [customerId] : {
+            [userID] : {
               ...res.data,
               customerFirstName,
               customerLastName
@@ -194,7 +204,7 @@ export class Welcome extends React.Component {
     //   return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     // }
 
-    axios.get('http://localhost:8000/dashboard/payload/', {
+    axios.get('https://demo1956799.mockable.io/api/v0/payload', {
       headers:
       {
         "Authorization" : "Token b5105eb7156772f029691eeba3148ff9a91f609c",
@@ -255,44 +265,9 @@ export class Welcome extends React.Component {
             <UserProfile customers={this.state.customers} selectedUser={this.state.selectedUser}/>
           </Col>
 
-          <Col md={12}>
-            <Row>
-            <Col md={5} style={{textAlign:'center'}}>
-
-            <Col xs={1} style={{textAlign:'center'}}>
-              <div style={{textAlign:'center'}}>5</div>
-            </Col>
-            <Col xs={5} style={{textAlign:'center', padding:'0'}}>
-              <div> Oct 9th, 2017</div>
-            </Col>
-            <Col xs={5} style={{textAlign:'center'}}>
-            <div style={{textAlign:'center', border:'1px white solid'}}>
-            Herminio Garcia <br/> 7474775136
-
-            1629 Second Street<br/> Duarte, CA 91010
-            </div>
-            </Col>
-            </Col>
-
-            <Col md={4} style={{textAlign:'center'}} className='orderSmall'>
-            <Col md={6}>
-            <Button title="Requested"/>
-            <div style={{display:'inline-block', border:'1px solid white', padding:'5px 13px', borderRadius:'5px'}}> Herbarium<br/> 7655439866</div>
-            </Col>
-            <Col md={6}>
-            <div style={{display:'inline-block', border:'1px solid white', padding:'5px 13px', borderRadius:'5px'}}> Strain</div>
-            <div style={{display:'inline-block', border:'1px solid white', padding:'5px 13px', borderRadius:'5px'}}> Driver</div>
-            </Col>
-            </Col>
-            <Col md={2} style={{textAlign:'center'}} className='orderSmall'>
-            <Button title="Strain"/>
-            <Button title="Driver"/>
-            </Col>
-            </Row>
-          </Col>
 
           <Col>
-              <Table noTopBorder={false}>
+              <Table noTopBorder={false} style={{display:'none'}}>
               <TableHead>
               <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>#</td>
               <td style={{textAlign:'center', lineHeight:'2rem', verticalAlign:'middle'}}>Order Date</td>
@@ -309,6 +284,48 @@ export class Welcome extends React.Component {
               </TableBody>
               </Table>
           </Col>
+            <Col md={12} className="removeSmall">
+              <Row>
+                <Col md={4}>
+                  <Col md={1} style={{textAlign:'center'}}>
+                  #
+                  </Col>
+                  <Col  md={4} style={{textAlign:'center'}}>
+                  Date
+                  </Col>
+                  <Col  md={6} style={{textAlign:'center'}}>
+                  Customer
+                  </Col>
+                </Col>
+                <Col md={2} lg={3} style={{textAlign:'center'}}>
+                  <Col lg={6}>
+                  Dispensary
+                  </Col>
+                  <Col lg={6}>
+                  Order_Status
+                  </Col>
+                </Col>
+                <Col md={3} lg={3} style={{textAlign:'center'}}>
+                  <Col xs={6}>
+                  Strain
+                  </Col>
+                  <Col xs={6}>
+                  Driver
+                  </Col>
+                </Col>
+                <Col md={3} lg={2} style={{textAlign:'center'}}>
+                  Update Status
+                </Col>
+              </Row>
+            </Col>
+            <Col>
+            <h2 className="addSmall" style={{textAlign:'center'}}>
+            Order Information
+            </h2>
+
+            </Col>
+
+          {this.renderOrdersResponsive(this.state.orders)}
         </Row>
       </Page>
     );

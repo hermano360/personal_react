@@ -44,7 +44,6 @@ export class Order extends React.Component {
 
   render() {
     const {order} = this.props
-    debugger
     const strainOptions = order.strainOptions.map((strain)=>{
       return { value: strain, label: strain }
     })

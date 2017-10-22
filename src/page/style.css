@@ -2,7 +2,15 @@
   overflow: visible !important;
 }
 
-@media only screen and (max-width: 787px) {
-    .orderSmall {
+@media (max-width: 768px) {
+    .removeSmall {
+      display: none !important;
+      border: none !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .addSmall {
+      display: none !important;
     }
 }
