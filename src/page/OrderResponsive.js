@@ -8,11 +8,17 @@ export class OrderResponsive extends React.Component {
   constructor() {
     super()
     this.state = {
-      driverOptions : []
+      driverOptions : [],
+      selectedDriver: null,
+      selectedStrain: null
     }
+
+    this.updateOrder = this.updateOrder.bind(this)
+    this.cancelOrder = this.cancelOrder.bind(this)
   }
   componentWillMount() {
-    }
+
+  }
 
   getDrivers(order) {
     let {orderNumber, userID, dispensaryID} = order
@@ -21,7 +27,7 @@ export class OrderResponsive extends React.Component {
     .then( (res) => {
       let driverOptions = res.data.availableDrivers.map((driver)=>{
         const label = `${driver.driverName} - ${driver.driverTime} min`
-        return {value: driver.driverId, label}
+        return {value: driver.driverId, label, time: driver.driverTime, name:driver.driverName}
       })
       this.setState({
         driverOptions
@@ -30,6 +36,18 @@ export class OrderResponsive extends React.Component {
     .catch(function (error) {
       console.log(error);
     });
+  }
+
+  updateOrder(){
+    let {orderNumber, dispensaryID} = this.props.order
+    if(this.state.selectedDriver && this.state.selectedStrain){
+      this.props.updateOrder('Delivery', this.state.selectedDriver.value, this.state.selectedStrain, orderNumber, dispensaryID)
+    }
+  }
+
+  cancelOrder(){
+    let {orderNumber, dispensaryID} = this.props.order
+      this.props.updateOrder('Cancelled', this.state.selectedDriver, this.state.selectedStrain, orderNumber, dispensaryID)
   }
 
 
@@ -42,8 +60,10 @@ export class OrderResponsive extends React.Component {
     const strainOptionsSelect = strainOptions.map((option) => { return {value:option, label:option}})
 
     let getCustomerInfo = () => {
-      this.props.getCustomerInfo(userID, customerFirstName, customerLastName)
+      this.props.getCustomerInfo(userID, customerFirstName, customerLastName, orderNumber)
     }
+
+
 
     return (
       <Col md={12} style={{borderTop:'1px solid white',paddingTop:'15px', marginBottom:'15px'}}>
@@ -69,7 +89,7 @@ export class OrderResponsive extends React.Component {
           {dispensaryName}<br/>{dispensaryPhone}
           </div>
           </Col>
-          <Col lg={6} md={12} xs={4} offset={{xs:1, sm:0, md:0}}>
+          <Col lg={6} md={12} xs={4} offset={{xs:1, sm:1, md:0}} style={{textAlign:'center'}}>
           <Button type='add' size='mm' title={orderStatus} isIconHidden={true}/>
           </Col>
         </Col>
@@ -80,7 +100,12 @@ export class OrderResponsive extends React.Component {
             placeholder='Strain'
             isSearchable={true}
             options={strainOptionsSelect}
-            onChange={(e)=>{console.log(e)}}
+            onChange={(e)=>{
+              console.log(e)
+              this.setState({ selectedStrain: e})
+            }}
+
+            disabled={orderStatus!=='Delivery'}
              />
           </Col>
           <Col xs={6}>
@@ -89,22 +114,34 @@ export class OrderResponsive extends React.Component {
             isSearchable={false}
             options={this.state.driverOptions}
             onToggleOpen={(e)=>{this.getDrivers(this.props.order)}}
-            onChange={(e)=>{console.log(e)}}
+            onChange={(e)=>{
+              this.setState({ selectedDriver: this.state.driverOptions[e-1]})
+            }}
+            disabled={orderStatus!=='Delivery'}
              />
           </Col>
         </Col>
 
+        {orderStatus !== 'Delivery' && <Col xs={12} sm={6} md={3} lg={2} style={{textAlign:'center', paddingBottom:'20px'}} className='orderSmall'>
+          <Col xs={3} lg={6} sm={6} offset={{xs:2, sm:0}} >
+            <Button type='success' size='mm' title='Update'
+            isIconHidden={true}
+            disabled={this.state.selectedDriver===null || this.state.selectedStrain===null }
+            onClick={()=>{this.updateOrder()}}/>
+          </Col>
+          <Col xs={3} lg={6} sm={6} offset={{xs:2, sm:0}}>
+            <Button type='danger' size='mm' title='Cancel' isIconHidden={true}
+            onClick={()=>{this.cancelOrder()}}/>
+          </Col>
+          </Col>
+        }
+        {orderStatus === 'Delivery' && <Col xs={12} sm={6} md={3} lg={2} style={{textAlign:'center', paddingBottom:'20px'}} className='orderSmall'>
+          <Col xs={6} >
+            <Button type='success' size='mm' title='Out For Delivery'/>
+          </Col>
+          </Col>
+        }
 
-        <Col xs={12} sm={6} md={3} lg={2} style={{textAlign:'center', paddingBottom:'20px'}} className='orderSmall'>
-        <Col xs={3} lg={6} md={6} offset={{xs:2, md:0}} >
-        <Button type='success' size='mm' title='Update'
-        isIconHidden={true}
-        onClick={()=>{console.log('success', this.props.order)}}/>
-        </Col>
-        <Col xs={3} lg={6} md={6} offset={{xs:2, md:0}}>
-        <Button type='danger' size='mm' title='Cancel' isIconHidden={true}/>
-        </Col>
-        </Col>
         </Row>
       </Col>
     );

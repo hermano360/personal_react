@@ -2,7 +2,7 @@ import React from 'react';
 import { withRouter } from 'react-router';
 
 // Components
-import { Sidebar, PageTop } from 'src/layout/components';
+import {PageTop } from 'src/layout/components';
 import { Notifications } from 'react-blur-admin';
 
 // Lib

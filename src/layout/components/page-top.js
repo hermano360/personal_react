@@ -4,8 +4,6 @@ import moment from 'moment';
 import { noop } from 'lodash';
 import Person from 'react-blur-admin/dist/assets/img/person.svg';
 
-import {SearchBar} from 'src/layout/components/search-bar';
-
 // Lib
 import eventBus from 'src/lib/event-bus';
 import {MessagesAlert, MessagesAlertContainer, NotificationsAlert, NotificationAlert} from 'react-blur-admin';
@@ -122,23 +120,6 @@ export class PageTop extends React.Component {
     );
   }
 
-  renderHamburgerMenu() {
-    return null;
-
-    // @todo
-    // return (
-    //   <a href className="collapse-menu-link ion-navicon" ng-click="isMenuCollapsed=!isMenuCollapsed"></a>
-    // );
-  }
-
-  renderSearch() {
-    return (
-      <div className="search">
-        <SearchBar />
-      </div>
-    );
-  }
-
   renderMessages() {
     let message = _.assign({}, this.state.messages);
     return _.map(message, (messages, index) => {
@@ -201,10 +182,6 @@ export class PageTop extends React.Component {
     return (
       <div className="page-top clearfix" scroll-position="scrolled" max-height="50">
         {this.renderLogo()}
-
-        {/*<a className="collapse-menu-link ion-navicon"></a>*/}
-        {this.renderHamburgerMenu()}
-        {this.renderSearch()}
         {this.renderUserSection()}
       </div>
     );

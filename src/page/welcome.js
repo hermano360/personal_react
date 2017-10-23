@@ -1,15 +1,16 @@
 import React from 'react';
-import { Page, Panel, Button, Textarea, Table, TableHead, TableBody, TableRow, Select, eventBus, Modal } from 'react-blur-admin';
+import { Page, Panel, Button, Textarea, Table, TableHead, TableBody, TableRow, Select, Modal } from 'react-blur-admin';
 import { Row, Col, ClearFix } from 'react-grid-system';
 import {Radar, RadarChart, PolarGrid, Legend, PolarAngleAxis, PolarRadiusAxis} from 'recharts';
 import StarRatingComponent from 'react-star-rating-component';
 import styles from "./style.css";
 import EventSource from 'react-eventsource'
 import axios from 'axios'
-import { Order } from './Order.js'
-import { OrderResponsive } from './OrderResponsive.js'
-import { UserProfile } from './UserProfile.js'
-import { OrderStatus } from './OrderStatus.js'
+import { Order } from './Order'
+import { OrderResponsive } from './OrderResponsive'
+import { UserProfile } from './UserProfile'
+import { OrderStatus } from './OrderStatus'
+import { OrderData } from './OrderData'
 require('./cookie.js')
 
 const urlDatabase = (strain) => {
@@ -73,82 +74,21 @@ export class Welcome extends React.Component {
       orders: [],
       customers: {},
       selectedUser:0,
-      selectedCustomer:"Herminio Garcia",
       selectedOrder:0,
       token:`Token ${localStorage.getItem('authToken')}`,
       orderStatuses:[],
+      feedbackEntries:[],
       customerRecOpen: false,
       customerIdOpen: false,
-      "customerInformation":{
-      "Herminio Garcia": {
-        "categoryScores":[5,6,3,2,9], //Hybrid, Sativa Hybrid, Sativa, Indica, Indica Hybrid
-        "pricePoints":[45, 65],
-        "buzzwords": ["citrus", "earthy", " citrus", "earthy", " citrus", "earthy", " citrus", "earthy"],
-        "imageSrc": "/assets/images/headshot.jpg",
-        "name": "Herminio Garcia",
-        "phone": '+17655436533',
-        "orders": [
-          {
-            orderTime:1507430040000,
-            strain: "Orange Crush",
-            type: 'sativa',
-            rating: 3,
-            high: "head",
-            harshness: "smooth",
-            feedback: "Orange Crush is known for its dank earthy scent and citrus flavor.",
-            orderBuzzwords: ["citrus", "earthy", " citrus", "earthy", " citrus", "earthy"],
-            dispensary: "Hollywood High Grade"
-          },
-          {
-            orderTime:1507170420000,
-            strain: "Maui Wowie",
-            type:'indica',
-            rating: 4,
-            high: "body",
-            harshness: "harsh",
-            feedback: "Lightweight sativa effects allow your mind to drift away to creative escapes, while Maui Wowie’s motivating, active effects may be all you need to get outside and enjoy the sun.",
-            orderBuzzwords: ["earthy", " citrus", "earthy", " citrus", "earthy"],
-            dispensary: "La Brea Compassionate Caregivers"
-          },
-          {
-            orderTime:1506800040000,
-            strain: "Panama Red",
-            type:'indica',
-            rating: 2,
-            high: "head",
-            harshness: "harsh",
-            feedback: "Panama Red is a Sativa strain that first gained popularity back in the 1960s and was widely loved up through the nineties. ",
-            orderBuzzwords: [" citrus", "earthy", " citrus", "earthy", " citrus", "earthy"],
-            dispensary: 'The Green Easy'
-          },
-          {
-            orderTime:1505468040000,
-            strain: "Malawi",
-            type:'sativa',
-            rating: 5,
-            high: "body",
-            harshness: "harsh",
-            feedback: "Southern African nation Malawi is one of the most prolific grower of cannabis in its region.",
-            orderBuzzwords: ["earthy", " citrus", "earthy"],
-            dispensary: "La Brea Compassionate Caregivers"
-          },
-          {
-            orderTime:1505045880000,
-            strain: "Jesus OG",
-            type: 'hybrid',
-            rating: 4,
-            high: "body",
-            harshness: "smooth",
-            feedback: "Call it blasphemous, but Jesus OG is one hybrid with the unique ability to elevate both body and mind. ",
-            orderBuzzwords: ["earthy", " citrus", "earthy", " citrus", "earthy", " citrus", "earthy"],
-            dispensary: "Herbarium"
-          },
-        ]
-      }}
+      driverInformation:{}
 
     }
     this.customerModals = this.customerModals.bind(this)
     this.getCustomerInfo = this.getCustomerInfo.bind(this)
+    this.renderOrderData = this.renderOrderData.bind(this)
+    this.updateOrder = this.updateOrder.bind(this)
+    this.cancelOrder = this.cancelOrder.bind(this)
+    this.getUpdatedOrders = this.getUpdatedOrders.bind(this)
   }
 
   renderOrders(orders) {
@@ -163,12 +103,12 @@ export class Welcome extends React.Component {
     let orderedOrders = organizeOrders(orders)
     return orderedOrders.map((order,i)=> {
       return (
-        <OrderResponsive key={i} order={order} getCustomerInfo={this.getCustomerInfo}/>
+        <OrderResponsive key={i} order={order} updateOrder={this.updateOrder} getCustomerInfo={this.getCustomerInfo}/>
       )
     })
   }
 
-  getCustomerInfo(userID, customerFirstName, customerLastName) {
+  getCustomerInfo(userID, customerFirstName, customerLastName, orderNumber) {
     console.log(userID)
     const preferencesUrl = `/dashboard/customer_preferences/${userID}/`
     axios.get(`https://demo1956799.mockable.io${preferencesUrl}`)
@@ -182,7 +122,8 @@ export class Welcome extends React.Component {
               customerLastName
             }
           },
-          selectedUser: userID
+          selectedUser: userID,
+          selectedOrder: orderNumber
         })
       })
       .catch(error => {
@@ -197,9 +138,65 @@ export class Welcome extends React.Component {
       'Authorization' : `Token ${localStorage.getItem('authToken')}`,
       'Content-Type': 'application/json'
     }}).then(res=>{
-      console.log(res.data)
+      let {feedbackEntries} = res.data
+      this.setState({feedbackEntries})
     }).catch(err=>console.log(err))
 
+  }
+
+  renderOrderData(){
+    const { orders, driverInformation } = this.state
+
+    return orders.map((order,i)=> {
+      return (
+        <OrderData key={order.orderNumber} order={order} driverInformation={driverInformation}/>
+      )
+    })
+  }
+
+  updateOrder(order_status, driverID, strainName, orderID, dispensaryID){
+    if(driverID===null) driverID = 0
+    if(strainName===null) strainName = "strain"
+    axios({
+      url:`http://127.0.0.1:8000/dashboard/update_order/`,
+      method:'put',
+      headers: {
+      'Authorization' : `Token ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    },
+    data: {
+      orderID,
+      driverID,
+      dispensaryID,
+      strainName:'strain 1',
+      order_status
+    }
+    }).then(res=>{
+      console.log(res.status)
+      this.getUpdatedOrders()
+    }).catch(err=>console.log(err))
+  }
+
+  cancelOrder(driverInformation, strainName, orderID, dispensaryID){
+    let driverID = driverInformation.value
+    axios({
+      url:`http://127.0.0.1:8000/dashboard/update_order/`,
+      method:'put',
+      headers: {
+      'Authorization' : `Token ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    },
+    data: {
+      orderID,
+      driverID,
+      dispensaryID,
+      strainName:'strain 1',
+      order_status: 'Cancelled'
+    }
+    }).then(res=>{
+      this.getUpdatedOrders()
+    }).catch(err=>console.log(err))
+    this.setState({driverInformation})
   }
 
   customerModals() {
@@ -227,12 +224,7 @@ export class Welcome extends React.Component {
     )
   }
 
-  componentWillMount() {
-    // let csrftoken = Cookies.get('csrftoken');
-    // function csrfSafeMethod(method) {
-    //   // these HTTP methods do not require CSRF protection
-    //   return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    // }
+  getUpdatedOrders(){
     axios.get('http://127.0.0.1:8000/dashboard/payload/', {
       headers:
       {
@@ -245,28 +237,19 @@ export class Welcome extends React.Component {
           orders: response.data.orders
         })
       })
-      .catch(function (error) {
-        console.log(error);
+      .catch((error) => {
+        this.setState({
+          orders: []
+        })
       });
   }
 
-  render() {
-    const {customerInformation, selectedOrder, selectedCustomer} = this.state
-    const {categoryScores, pricePoints, orders, imageSrc, buzzwords} = customerInformation[selectedCustomer]
-    const data = [
-        { subject: 'Hybrid', A: categoryScores[0]},
-        { subject: 'Sativa Hybrid', A: categoryScores[1]},
-        { subject: 'Sativa', A: categoryScores[2]},
-        { subject: 'Indica', A: categoryScores[3]},
-        { subject: 'Indica Hybrid', A: categoryScores[4]},
-    ];
-    const buzzwordsCustomer = buzzwords.map((buzzword, i) => {
-      return (
-        <Button type={i % 2 ==0 ? 'info': 'add'} size='sm' title={buzzword} isIconHidden={true}></Button>
-      )
-    })
+  componentWillMount() {
+    this.getUpdatedOrders()
+  }
 
-    const individualOrderTime = new Date(orders[selectedOrder].orderTime)
+  render() {
+    const {selectedOrder} = this.state
     const clockTime = () => {
       let hours = individualOrderTime.getHours() % 12 == 0 ? 12 : individualOrderTime.getHours() % 12
       let minutes = individualOrderTime.getMinutes()
@@ -286,12 +269,12 @@ export class Welcome extends React.Component {
       {this.customerModals()}
         <Row>
           <Col md={3}>
-            <Panel title="Drivers, Dispensary Data">
-              <h5><i className="fa fa-fw fa-truck"></i> Order 392 shipped <Button size='sm' title={'23 min'} type="info" isIconHidden={true}/></h5>
+            <Panel title="Orders">
+            {this.renderOrderData()}
             </Panel>
           </Col>
           <Col md={9}>
-            <UserProfile customers={this.state.customers} selectedUser={this.state.selectedUser}/>
+            <UserProfile customers={this.state.customers} feedback={this.state.feedbackEntries} selectedUser={this.state.selectedUser} selectedOrder={selectedOrder}/>
           </Col>
 
 

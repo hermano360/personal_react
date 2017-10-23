@@ -17,32 +17,6 @@
 - `npm i -g foreman` (if you don't have it globally installed already)
 - `make client`
 
-## Features
-
-- Button demo
-- Input demo (text/select/switch/radio/checkbox/textarea)
-- Progress bar demo
-- Not Found page
-- Table demo
-- Tabs demo
-- Welcome page (featuring different panels)
-- Modal demo
-- Notification demo
-- Maps
-
-## In progress of completion
-
-- Accordions (in progress)
-- Mail (waiting to be merged)
-- Slider
-- Profile (waiting to be merged)
-
-## Todo
-
-- Settings demos
-- Timeline
-- Tree View
-- Fix routing on gh-pages
 
 ## Themes
 
@@ -54,4 +28,3 @@ If you don't have an Auth0 account, create a new one, add the required .env vars
 
 Make sure in your Settings tab on Auth0's site to set callback url's to `http://localhost:8011/login` and
 allowed origins to `http://localhost:8011`
-

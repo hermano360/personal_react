@@ -18,57 +18,42 @@ const clockTime = (time) => {
   return `${hours}:${minutes} ${dayPhase}`
 }
 
-const customerInfoTable = (previousOrders) => {
-  debugger
+const customerInfoTable = (feedback) => {
   const monthNames= ['Jan', 'Feb', 'Mar', 'Apr', 'May', "Jun", 'Jul', "Aug", "Sep", "Oct", "Nov", "Dec"]
   const dayNames= ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  return previousOrders.map((order, i) => {
+  return feedback.map((order, i) => {
     const orderTimeFormatted = new Date(order.orderTime)
-    console.log(order)
-    let orderColor = 'white'
-    switch (order.cannabisType){
-      case 'sativa':
-        orderColor = 'green'
-        break
-      case 'indica':
-        orderColor = 'purple'
-        break
-      case 'hybrid':
-        orderColor = 'red'
-        break
-      }
     return (
-<Row style={{borderBottom:'.5px solid white'}}>
-<Col sm={3}>
+      <Row key={i} style={{borderBottom:'.5px solid white', textAlign:'center'}}>
+        <Col sm={3}>
           <a href={order.strainUrl} target="_blank">
             <h4>{order.strainName}</h4>
-            <h5 style={{color : orderColor}}>{capitalizeWord(order.cannabisType)}</h5>
             <h5>{order.dispensaryName}</h5>
           </a>
-          </Col>
-          <Col sm={3}>
+        </Col>
+        <Col sm={3}>
           <h3>{clockTime(orderTimeFormatted)}</h3>
           <h5>{`${dayNames[orderTimeFormatted.getDay()]} ${monthNames[orderTimeFormatted.getMonth()]} ${orderTimeFormatted.getDate()}`}</h5>
           <StarRatingComponent
             name="rate2"
             editing={false}
             starCount={5}
-            value={order.totalRating}
+            value={order.totalRating/2}
             />
             {/*<EventSource url="http://d1b65084.fanoutcdn.com/api/v0/events/?channel=customer_1">
               { events => {
                 console.log('react')
                 console.log(events) }}
             </EventSource>*/}
-            </Col>
-            <Col sm={6}>
-      <Textarea
-        name='textarea'
-        value={order.feedback}
-        onChange={()=>{}}
-        readOnly={true}/>
         </Col>
-    </Row>
+        <Col sm={6} xs={12}>
+          <Textarea
+            name='textarea'
+            value={order.feedback}
+            onChange={()=>{}}
+            readOnly={true}/>
+        </Col>
+      </Row>
     )
   })
 }
@@ -83,7 +68,8 @@ export class UserProfile extends React.Component {
   componentWillMount() {
 
   }
-  renderUserProfile(customers, selectedUser) {
+  renderUserProfile(customers, selectedUser, feedback, selectedOrder) {
+
     if(selectedUser !== 0) {
       let customer = customers[selectedUser]
       let { IdPhotoLink, buzzwords, customerFirstName, customerLastName, pricePoints, recPhotoLink} = customer
@@ -96,9 +82,9 @@ export class UserProfile extends React.Component {
       //     { subject: 'Indica Hybrid', A: cannabisTypeScores[4]},
       // ];
       return (
-        <div>
         <Row>
-          <Col md={3} style={{textAlign:'center'}}>
+          <Col md={4} lg={3}  style={{textAlign:'center'}}>
+          <h4>{` Order ${selectedOrder}`}</h4>
             <img src="/assets/images/headshot.jpg" alt="Herminio Garcia" height="150" width="105"/>
             <h4>{`${customerFirstName} ${customerLastName}`}</h4>
             <Button type='warning'
@@ -106,34 +92,41 @@ export class UserProfile extends React.Component {
             isIconHidden={true} />
             <Button type='info' size='mm' title='Customer ID' isIconHidden={true}  />
           </Col>
-          <Col md={3}  style={{textAlign:'center'}}>
-{/*          <RadarChart cx={90} cy={80} outerRadius={50} width={200} height={150} data={data} style={{textAlign:'center'}}>
+          <Col  lg={9} md={8}  style={{textAlign:'center'}} >
+            <Col sm={6} md={12}lg={6} style={{marginTop:'20px'}}>
+              <h2>Price Points</h2>
+              <Button type='warning' size='xs' title={`Min: $${pricePoints[0].min}`} isIconHidden={true}/>
+              <Button type='danger' size='xs' title={`Max: $${pricePoints[0].max}`} isIconHidden={true}/>
+            </Col>
+            <Col sm={6} md={12} lg={6} style={{marginTop:'20px'}}>
+              <h2>Buzzwords</h2>
+              {this.renderBuzzwords(buzzwords)}
+            </Col>
+          </Col>
+
+          <Col lg={9} >
+          <Panel>
+            <div style={{maxHeight:'300px', overflowY:'scroll', overflowX:'hidden', border:'1px solid black', textAlign:'center'}}>
+            {customerInfoTable(feedback)}
+            </div>
+          </Panel>
+          </Col>
+
+
+
+
+
+
+          {/* <Col md={3}  style={{textAlign:'center'}}>
+           <RadarChart cx={90} cy={80} outerRadius={50} width={200} height={150} data={data} style={{textAlign:'center'}}>
             <PolarGrid  tick={false} />
             <PolarAngleAxis dataKey="subject"/>
             <PolarRadiusAxis domain={[0, 10]}  axisLine={false}/>
             <Radar name={customer.customerFirstName} dataKey="A" stroke="#98BEA6" fill="#98BEA6" fillOpacity={0.6} isAnimationActive={true}/>
-          </RadarChart> */}
-          </Col>
-          <Col md={6} style={{textAlign:'center'}}>
-          <Col xs={6} md={12} lg={6} style={{marginTop:'20px'}}>
-          <h2>Price Points</h2>
-          <Button type='warning' size='xs' title={`Min: $${pricePoints[0].min}`} isIconHidden={true}/>
-          <Button type='danger' size='xs' title={`Max: $${pricePoints[0].max}`} isIconHidden={true}/>
-          </Col>
-          <Col xs={6} md={12} lg={6} style={{marginTop:'20px'}}>
-          <h2>Buzzwords</h2>
-          {this.renderBuzzwords(buzzwords)}
-          </Col>
-          </Col>
+          </RadarChart>
+          </Col> */}
+
         </Row>
-        <Row>
-        <Panel>
-          <div style={{maxHeight:'300px', overflowY:'scroll', border:'1px solid black', textAlign:'center'}}>
-          {/*customerInfoTable(customer.feedbackEntries)*/}
-          </div>
-        </Panel>
-        </Row>
-        </div>
       )
     } else {
       return <div></div>
@@ -143,17 +136,14 @@ export class UserProfile extends React.Component {
 
   renderBuzzwords(buzzwords) {
     return buzzwords.map((buzzword) => {
-      return <Button key={buzzword.word} type={buzzword.category === 'effect' ? 'info': 'add'} size='sm' title={buzzword.word} isIconHidden={true}></Button>
+      return <Button key={buzzword.word} type={buzzword.category === 'effect' ? 'info': 'add'} size='xs' title={buzzword.word} isIconHidden={true}></Button>
     })
   }
-
-
   render() {
-
-    const {customers, selectedUser} = this.props
+    const {customers, selectedUser, feedback, selectedOrder} = this.props
     return (
       <Panel title='Customer Information'>
-      {this.renderUserProfile(customers, selectedUser)}
+      {this.renderUserProfile(customers, selectedUser, feedback, selectedOrder)}
       </Panel>
     );
   }
