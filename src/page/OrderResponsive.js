@@ -42,7 +42,7 @@ export class OrderResponsive extends React.Component {
     const strainOptionsSelect = strainOptions.map((option) => { return {value:option, label:option}})
 
     let getCustomerInfo = () => {
-      this.props.getCustomerInfo(customerFirstName, customerLastName, userID)
+      this.props.getCustomerInfo(userID, customerFirstName, customerLastName)
     }
 
     return (
@@ -99,7 +99,7 @@ export class OrderResponsive extends React.Component {
         <Col xs={3} lg={6} md={6} offset={{xs:2, md:0}} >
         <Button type='success' size='mm' title='Update'
         isIconHidden={true}
-        onClick={e => eventBus.addNotification('success', `Order Updated`)}/>
+        onClick={()=>{console.log('success', this.props.order)}}/>
         </Col>
         <Col xs={3} lg={6} md={6} offset={{xs:2, md:0}}>
         <Button type='danger' size='mm' title='Cancel' isIconHidden={true}/>

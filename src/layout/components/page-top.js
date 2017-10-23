@@ -118,7 +118,7 @@ export class PageTop extends React.Component {
 
   renderLogo() {
     return (
-      <Link to={{ pathname: '/' }} className="al-logo clearfix">Budsy Admin</Link>
+      <Link to={{ pathname: '/' }} className="al-logo clearfix">Budsy</Link>
     );
   }
 
@@ -202,7 +202,7 @@ export class PageTop extends React.Component {
       <div className="page-top clearfix" scroll-position="scrolled" max-height="50">
         {this.renderLogo()}
 
-        <a className="collapse-menu-link ion-navicon"></a>
+        {/*<a className="collapse-menu-link ion-navicon"></a>*/}
         {this.renderHamburgerMenu()}
         {this.renderSearch()}
         {this.renderUserSection()}

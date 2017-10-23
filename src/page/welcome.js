@@ -9,6 +9,7 @@ import axios from 'axios'
 import { Order } from './Order.js'
 import { OrderResponsive } from './OrderResponsive.js'
 import { UserProfile } from './UserProfile.js'
+import { OrderStatus } from './OrderStatus.js'
 require('./cookie.js')
 
 const urlDatabase = (strain) => {
@@ -45,6 +46,20 @@ const orderBuzzwords = (order) => {
     })
 }
 
+const organizeOrders = (orders) => {
+  let newOrders = orders.map((order)=>{return order})
+  for(let i = 1; i < newOrders.length; i++){
+    for(let j= i - 1; j >= 0; j--){
+      if(newOrders[j].orderNumber > newOrders[j+1].orderNumber){
+        let temp = newOrders[j]
+        newOrders[j] = newOrders[j+1]
+        newOrders[j+1] = temp
+      }
+    }
+  }
+  return newOrders
+}
+
 
 
 const renderEvent = event => <div>{ event }</div>
@@ -60,6 +75,8 @@ export class Welcome extends React.Component {
       selectedUser:0,
       selectedCustomer:"Herminio Garcia",
       selectedOrder:0,
+      token:`Token ${localStorage.getItem('authToken')}`,
+      orderStatuses:[],
       customerRecOpen: false,
       customerIdOpen: false,
       "customerInformation":{
@@ -143,17 +160,18 @@ export class Welcome extends React.Component {
   }
 
   renderOrdersResponsive(orders) {
-    return orders.map((order,i)=> {
+    let orderedOrders = organizeOrders(orders)
+    return orderedOrders.map((order,i)=> {
       return (
         <OrderResponsive key={i} order={order} getCustomerInfo={this.getCustomerInfo}/>
       )
     })
   }
 
-  getCustomerInfo(userID) {
+  getCustomerInfo(userID, customerFirstName, customerLastName) {
     console.log(userID)
-    const url = `/dashboard/customer_preferences/${userID}/`
-    axios.get(`https://demo1956799.mockable.io/${url}`)
+    const preferencesUrl = `/dashboard/customer_preferences/${userID}/`
+    axios.get(`https://demo1956799.mockable.io${preferencesUrl}`)
       .then( (res) => {
         this.setState({
           customers: {
@@ -164,12 +182,24 @@ export class Welcome extends React.Component {
               customerLastName
             }
           },
-          selectedUser: customerId
+          selectedUser: userID
         })
       })
-      .catch(function (error) {
+      .catch(error => {
         console.log(error);
       });
+      const feedbackUrl = `/dashboard/customer_feedback/${userID}/`
+      console.log(`Token ${localStorage.getItem('authToken')}`)
+    axios({
+      url:`http://127.0.0.1:8000/dashboard/customer_feedback/1/`,
+      method:'get',
+      headers: {
+      'Authorization' : `Token ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    }}).then(res=>{
+      console.log(res.data)
+    }).catch(err=>console.log(err))
+
   }
 
   customerModals() {
@@ -203,11 +233,10 @@ export class Welcome extends React.Component {
     //   // these HTTP methods do not require CSRF protection
     //   return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     // }
-
-    axios.get('https://demo1956799.mockable.io/api/v0/payload', {
+    axios.get('http://127.0.0.1:8000/dashboard/payload/', {
       headers:
       {
-        "Authorization" : "Token b5105eb7156772f029691eeba3148ff9a91f609c",
+        "Authorization" : `Token ${localStorage.getItem('authToken')}`,
         "Content-Type": "application/json"
       }
     })
@@ -287,13 +316,13 @@ export class Welcome extends React.Component {
             <Col md={12} className="removeSmall">
               <Row>
                 <Col md={4}>
-                  <Col md={1} style={{textAlign:'center'}}>
+                  <Col xs={3} lg={3} style={{textAlign:'center'}}>
                   #
                   </Col>
-                  <Col  md={4} style={{textAlign:'center'}}>
+                  <Col  sm={4} xs={3} style={{textAlign:'center'}}>
                   Date
                   </Col>
-                  <Col  md={6} style={{textAlign:'center'}}>
+                  <Col  xs={5} style={{textAlign:'center'}}>
                   Customer
                   </Col>
                 </Col>
