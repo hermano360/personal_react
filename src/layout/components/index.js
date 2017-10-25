@@ -1,2 +1,2 @@
-export * from './page-top';
-export * from './sidebar';
+export * from './page-top'
+export * from './sidebar'

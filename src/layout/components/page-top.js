@@ -5,7 +5,6 @@ import { noop } from 'lodash';
 import Person from 'react-blur-admin/dist/assets/img/person.svg';
 
 // Lib
-import eventBus from 'src/lib/event-bus';
 import {MessagesAlert, MessagesAlertContainer, NotificationsAlert, NotificationAlert} from 'react-blur-admin';
 import {Row, Col} from 'react-flex-proto';
 
@@ -139,8 +138,9 @@ export class PageTop extends React.Component {
   }
 
   renderUserSection() {
+    let loggedInStatus = localStorage.getItem('authToken') === null ? 'none' : 'block'
     return (
-      <div className="user-profile clearfix">
+      <div className="user-profile clearfix" style={{display: loggedInStatus}}>
         <div className={`al-user-profile dropdown ${this.state.isMenuOpen ? 'open' : ''}`}>
           <a className="profile-toggle-link dropdown-toggle" onClick={this.onToggleMenu.bind(this)}>
             <img src={this.props.user && this.props.user.picture ? this.props.user.picture : Person}/>
@@ -150,13 +150,14 @@ export class PageTop extends React.Component {
             <li><Link to="/"><i className="fa fa-user"></i>Profile</Link></li>
             <li><Link to="/'"><i className="fa fa-cog"></i>Settings</Link></li>
             <li>
-              <a href={this.props.location.pathname} className="signout" onClick={e => this.onLogout()}>
-                <i className="fa fa-power-off"></i>Sign out
-              </a>
+            <Link to="/" onClick={()=>{
+              localStorage.removeItem('authToken')
+              window.location.reload();
+            }}><i className="fa fa-power-off"></i>Signout</Link>
             </li>
           </ul>
         </div>
-        <Row>
+        {/*<Row>
           <Col padding='5px 2px'>
             <MessagesAlertContainer mailCount={this.state.messages.length} markAllAsReadOnClick={noop} allMessagesOnClick={noop} settingsOnClick={noop} >
               {this.renderMessages()}
@@ -169,7 +170,7 @@ export class PageTop extends React.Component {
                 {this.renderNotifications()}
             </NotificationsAlert>
           </Col>
-        </Row>
+        </Row>*/}
       </div>
     );
   }

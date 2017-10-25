@@ -1,12 +1,8 @@
 import React from 'react';
 import { withRouter } from 'react-router';
 
-// Components
 import {PageTop } from 'src/layout/components';
-import { Notifications } from 'react-blur-admin';
 
-// Lib
-import eventBus from 'src/lib/event-bus';
 
 class AppLayout extends React.Component {
   static propTypes = {
@@ -23,19 +19,12 @@ class AppLayout extends React.Component {
   }
 
   componentWillMount() {
-    if (process.env.AUTH0_PUB_KEY) {
-      this.lock = new Auth0Lock(process.env.AUTH0_PUB_KEY, process.env.AUTH0_DOMAIN);
-      this.setState({idToken: this.getIdToken()}); // Must come after this.lock init
-    }
 
-    eventBus.on('logout', () => this.onLogout());
+
   }
 
   componentDidMount() {
-    if (! this.state.idToken && process.env.AUTH0_PUB_KEY) {
-      return this.redirectToLogin();
-    }
-    return this.setUser();
+
   }
 
   onLogout() {
@@ -81,7 +70,6 @@ class AppLayout extends React.Component {
     return (
       <div>
         <main className=''>
-          {/*<Sidebar {...this.props} />*/}
           <PageTop location={this.props.location} user={this.state.user} />
 
           <div className="al-main">
@@ -92,7 +80,6 @@ class AppLayout extends React.Component {
 
           <back-top></back-top>
         </main>
-        <Notifications />
       </div>
     );
   }
