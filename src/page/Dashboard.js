@@ -7,6 +7,7 @@ import axios from 'axios'
 import { OrderResponsive } from './OrderResponsive'
 import { UserProfile } from './UserProfile'
 import { OrderData } from './OrderData'
+import base from '../init/base'
 
 // For when we eventually do web sockets
 // const renderEvent = event => <div>{ event }</div>
@@ -39,19 +40,18 @@ export class Dashboard extends React.Component {
   }
 
   getCustomerInfo (userID, customerFirstName, customerLastName, orderNumber) {
+    const baseURL = base.url
     const preferencesUrl = `/dashboard/customer_preferences/${userID}/`
     const feedbackUrl = `/dashboard/customer_feedback/${userID}/`
-    axios.all([
-      axios.get(`https://demo1956799.mockable.io${preferencesUrl}`),
-      axios({
-        url: `http://127.0.0.1:8000/dashboard/customer_feedback/1/`,
-        method: 'get',
-        headers: {
-          'Authorization': `Token ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json'
-        }})
-      ])
-      .then(axios.spread((preferences, feedbackEntries)=>{
+
+    axios({
+      url: `${baseURL}${preferencesUrl}`,
+      method: 'get',
+      headers: {
+        'Authorization': `Token ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      }})
+      .then((res) => {
         this.setState({
           customers:{
             ...this.state.customers,
@@ -62,20 +62,54 @@ export class Dashboard extends React.Component {
             }
           },
           selectedUser: userID,
-          selectedOrder: orderNumber,
-          feedbackEntries:feedbackEntries.data.feedbackEntries
+          selectedOrder: orderNumber
+      })
+    })
+    .catch(error=>console.log(error))
 
-        })
-      }))
-      .catch(error=>console.log(error))
+      // use this when both feedback and preferences are up and running
+
+    // axios.all([
+    //   axios({
+    //     url: `${baseURL}${preferencesUrl}`,
+    //     method: 'get',
+    //     headers: {
+    //       'Authorization': `Token ${localStorage.getItem('authToken')}`,
+    //       'Content-Type': 'application/json'
+    //     }}),
+    //   axios({
+    //     url: `${baseURL}/dashboard/customer_feedback/1/`,
+    //     method: 'get',
+    //     headers: {
+    //       'Authorization': `Token ${localStorage.getItem('authToken')}`,
+    //       'Content-Type': 'application/json'
+    //     }})
+    //   ])
+    //   .then(axios.spread((preferences, feedbackEntries)=>{
+        // this.setState({
+        //   customers:{
+        //     ...this.state.customers,
+        //     [userID]: {
+        //       ...preferences.data,
+        //       customerFirstName,
+        //       customerLastName
+        //     }
+        //   },
+        //   selectedUser: userID,
+        //   selectedOrder: orderNumber,
+        //   feedbackEntries:feedbackEntries.data.feedbackEntries
+    //
+    //     })
+    //   }))
+    //   .catch(error=>console.log(error))
   }
 
   updateOrder (order_status, driverID, strainName, orderID, dispensaryID) {
-    if (driverID === null) driverID = 0
-    if (strainName === null) strainName = 'strain'
+    console.log('update order',order_status, driverID, strainName, orderID, dispensaryID)
+    const baseURL = base.url
     let authorization = localStorage.getItem('authToken')
     axios({
-      url: `http://127.0.0.1:8000/dashboard/update_order/`,
+      url: `${baseURL}/dashboard/update_order/`,
       method: 'put',
       headers: {
         'Authorization': `Token ${authorization}`,
@@ -85,7 +119,7 @@ export class Dashboard extends React.Component {
         orderID,
         driverID,
         dispensaryID,
-        strainName: 'strain 1',
+        strainName,
         order_status
       }
     }).then(res => {
@@ -94,8 +128,9 @@ export class Dashboard extends React.Component {
   }
 
   getUpdatedOrders () {
+    const baseURL = base.url
     let authorization = localStorage.getItem('authToken')
-    axios.get('http://127.0.0.1:8000/dashboard/payload/', {
+    axios.get(`${baseURL}/dashboard/payload/`, {
       headers:
       {
         'Authorization': `Token ${authorization}`,
@@ -103,12 +138,14 @@ export class Dashboard extends React.Component {
       }
     })
       .then((response) => {
+        console.log(response)
         this.setState({
           orders: response.data.orders,
           toke: authorization
         })
       })
       .catch((error) => {
+        console.log(error)
         this.setState({
           orders: []
         })
@@ -121,7 +158,9 @@ export class Dashboard extends React.Component {
 
   render () {
     const {selectedOrder, orders, customers, feedbackEntries, selectedUser, driverInformation} = this.state
+
     const token = localStorage.getItem('authToken')
+    const baseURL = base.url
 
     return (
        <Page title='Dashboard - Order Overview' token={token} >

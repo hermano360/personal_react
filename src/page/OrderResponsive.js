@@ -3,6 +3,7 @@ import { Page, Panel, Button, Textarea, Table, TableHead, TableBody, TableRow, S
 import { Row, Col, ClearFix } from 'react-grid-system'
 import styles from './style.css'
 import axios from 'axios'
+import base from '../init/base'
 
 export class OrderResponsive extends React.Component {
   constructor () {
@@ -22,12 +23,21 @@ export class OrderResponsive extends React.Component {
 
   getDrivers (order) {
     let {orderNumber, userID, dispensaryID} = order
-    const url = `api/v0/order/driver/?order_id=${orderNumber}&dispensary_id=${dispensaryID}&customer_id=${userID}`
-    axios.get(`https://demo1956799.mockable.io/${url}`)
+    const baseURL = base.url
+    const authToken = `Token ${localStorage.getItem('authToken')}`
+    console.log(authToken)
+    axios({
+      url: `${baseURL}/api/v0/order/driver/?order_id=${orderNumber}&dispensary_id=${dispensaryID}&customer_id=${userID}`,
+      method: 'get',
+      headers: {
+        'Authorization': authToken,
+        'Content-Type': 'application/json'
+      }})
     .then((res) => {
+      console.log(res)
       let driverOptions = res.data.availableDrivers.map((driver) => {
-        const label = `${driver.driverName} - ${driver.driverTime} min`
-        return {value: driver.driverId, label, time: driver.driverTime, name: driver.driverName}
+        const label = `${driver.driverName}`
+        return {value: driver.driverId, label, name: driver.driverName}
       })
       this.setState({
         driverOptions
@@ -39,9 +49,17 @@ export class OrderResponsive extends React.Component {
   }
 
   updateOrder () {
+
     let {orderNumber, dispensaryID} = this.props.order
-    if (this.state.selectedDriver && this.state.selectedStrain) {
-      this.props.updateOrder('Delivery', this.state.selectedDriver.value, this.state.selectedStrain, orderNumber, dispensaryID)
+    console.log(this.state.selectedStrain)
+    let selectedDriver = undefined
+    if (this.state.selectedDriver !== null) {
+      selectedDriver = this.state.selectedDriver.value
+    }
+    if (this.state.selectedStrain) {
+      console.log('Delivery', selectedDriver, this.state.selectedStrain, orderNumber, dispensaryID)
+
+      this.props.updateOrder('Delivery', selectedDriver, this.state.selectedStrain, orderNumber, dispensaryID)
     }
   }
 
@@ -54,7 +72,8 @@ export class OrderResponsive extends React.Component {
     console.log(this.props)
     const {customerFirstName, customerLastName,
       customerPhone, dispensaryName, dispensaryPhone,
-      orderDate, orderNumber, strainOptions, userID, orderStatus} = this.props.order
+      orderDate, orderNumber, strainOptions=[], userID, orderStatus} = this.props.order
+
     const strainOptionsSelect = strainOptions.map((option) => { return {value: option, label: option} })
 
     let getCustomerInfo = () => {
@@ -93,6 +112,7 @@ export class OrderResponsive extends React.Component {
           <Col md={3} lg={3} sm={6} xs={12} style={{textAlign: 'center', paddingBottom: '20px'}} className='orderSmall'>
             <Col xs={6} >
               <Select
+                className="selectamundo"
                 placeholder='Strain'
                 isSearchable
                 options={strainOptionsSelect}
@@ -122,8 +142,8 @@ export class OrderResponsive extends React.Component {
             <Col xs={3} lg={6} sm={6} offset={{xs: 2, sm: 0}} >
               <Button type='success' size='mm' title='Update'
                 isIconHidden
-                disabled={this.state.selectedDriver === null || this.state.selectedStrain === null}
-                onClick={() => { this.updateOrder() }} />
+                disabled={this.state.selectedStrain === null}
+                onClick={() => { this.updateOrder()}} />
             </Col>
             <Col xs={3} lg={6} sm={6} offset={{xs: 2, sm: 0}}>
               <Button type='danger' size='mm' title='Cancel' isIconHidden

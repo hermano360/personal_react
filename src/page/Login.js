@@ -73,11 +73,11 @@ class Login extends React.Component {
 export default withRouter(Login)
 
 const submitPassword = (username, password, statusChange, login) => {
-  const url = `http://127.0.0.1:8000/dashboard/auth/login/`
+  const url = `https://c08e5e98.ngrok.io/dashboard/auth/login/`
   console.log(username, password)
   axios.post(url, {
     username: username,
-    password: password })
+    passwrd: password })
     .then((res) => {
       localStorage.setItem('authToken', res.data.auth_token)
       login()

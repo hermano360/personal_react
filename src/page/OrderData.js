@@ -23,7 +23,7 @@ export class OrderData extends React.Component {
     return (
       <div style={{textAlign: 'center', borderBottom: '1px white solid'}}>
         <h5><i className='fa fa-fw fa-truck' /> Order {order.orderNumber} </h5>
-        <h5> {order.orderStatus} - {order.orderStatus === 'Delivery' && <Button size='sm' title={`${driverTime} min`} type='info' isIconHidden />}
+        <h5> {order.orderStatus} {/*order.orderStatus === 'Delivery' && <Button size='sm' title={`${driverTime} min`} type='info' isIconHidden />*/}
         </h5>
       </div>
     )
